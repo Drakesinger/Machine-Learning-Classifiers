@@ -1,44 +1,86 @@
 # -*- encoding: utf-8 -*-
 
-__author__ = 'Horia Mut'
-
 import os
 import codecs
+
+from threading import Thread
 from random import shuffle
+from random import randint
+
+from shutil import rmtree
+from async import print_progress
+
+__author__ = 'Horia Mut'
 
 current_working_directory = os.getcwd() + "/Assets/"
 processed_files_directory = os.getcwd() + "/Processed/"
-part_of_speech = []
+
+
+# The categories available.
+categories = ['pos', 'neg']
+
+
+def start_preprocessing():
+    '''
+    Start the preprocessing and generate the required folders.
+    :return: does not return anything.
+    '''
+
+    # Delete processed folder if it exists
+    print "Deleting previous processed data folder."
+    if os.path.exists(processed_files_directory):
+        rmtree(processed_files_directory, True)
+
+    print "Building pre-processed data."
+    for text_type in categories:
+        assets_folder_name = text_type + "/"
+        pos = define_part_of_speech()
+        process_folder(assets_folder_name, text_type, part_of_speech=pos)
+
+    global is_stop_requested
+    is_stop_requested = True
+
+    print "Pre-processing is done. Data is ready to work with."
 
 
 def define_part_of_speech():
+    # The word types we want to extract and study.
     part_of_speech = ['NOM', 'ADV', 'VER', 'ADJ', 'PRP', 'KON', 'PRO', 'ABR']
+    return part_of_speech
 
 
-def process_folder(folder_name):
+def process_folder(folder_name, text_type, part_of_speech=None):
     '''
     Here we will reprocess our data before working with it.
     :param folder_name:
     :return:
     '''
+    lower_bound = 0
+    upper_bound = 1000
+    limit = 200
+
+    index = 0
+    number_of_files = len(os.listdir(current_working_directory + folder_name))
+    print_progress(index, number_of_files, prefix='Progress:', suffix='Complete', barLength=50)
+
     for filename in os.listdir(current_working_directory + folder_name):
-        words_in_the_file = process_file(filename)
+        words_in_the_file = process_file(folder_name, filename, part_of_speech=part_of_speech)
         shuffle(words_in_the_file)
 
-        make_processed_file(filename, words_in_the_file)
+        index += 1
+        print_progress(index, number_of_files, prefix='Progress:', suffix='Complete', barLength=50)
+
+        # Decide if the file will be used for testing or training.
+        choice = randint(lower_bound, upper_bound)
+        if choice <= limit:
+            # Test file
+            make_processed_file(filename, text_type, words_in_the_file, type='test')
+        else:
+            # Training file
+            make_processed_file(filename, text_type, words_in_the_file, type='train')
 
 
-def make_processed_file(filename, words_in_the_file):
-    if not os.path.exists(processed_files_directory):
-        os.makedirs(processed_files_directory)
-    processed_file = codecs.open(processed_files_directory + filename, 'w+', 'utf-8', buffering=1)
-    for ustring in words_in_the_file:
-        processed_file.write(ustring)
-        processed_file.write('\n')
-    processed_file.close()
-
-
-def process_file(filename):
+def process_file(assets_folder_name, filename, part_of_speech=None):
     '''
 
     :param filename:
@@ -48,27 +90,43 @@ def process_file(filename):
     file_words = []
     for line in working_file:
         words = line.split("\t")
-        word = ''
+        word = None
 
         try:
-            if words[1] in part_of_speech:
+            if part_of_speech:
+                if words[1] in part_of_speech:
+                    word = (words[2]).rstrip()
+            else:
                 word = (words[2]).rstrip()
         except UnicodeDecodeError:
             word = words[2].rstrip()
         except IndexError:
             pass
-        file_words.append(word)
+
+        if word:
+            file_words.append(word)
 
     working_file.close()
     return file_words
 
 
-if __name__ == '__main__':
-    folder_name_neg = "neg"
-    folder_name_pos = "pos"
+def make_processed_file(filename, text_type, words_in_the_file, type='', part_of_speech=''):
+    type_path = '/' + type + '/'
+    part_of_speech = '/' + part_of_speech + '/'
+    text_sentiment = '/' + text_type + '/'
 
-    assets_folder_name = folder_name_neg + "/"
-    processed_files_directory += assets_folder_name
-    print processed_files_directory
-    define_part_of_speech()
-    process_folder(assets_folder_name)
+    if not os.path.exists(processed_files_directory + type_path + text_sentiment + part_of_speech):
+        os.makedirs(processed_files_directory + type_path + text_sentiment + part_of_speech)
+
+    # Disgusting code.
+    processed_file = codecs.open(processed_files_directory + type_path
+                                 + text_sentiment
+                                 + part_of_speech
+                                 + filename, 'w+', 'utf-8',
+                                 buffering=1)
+
+    for ustring in words_in_the_file:
+        processed_file.write(ustring)
+        processed_file.write('\n')
+
+    processed_file.close()

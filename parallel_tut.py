@@ -1,10 +1,15 @@
-__author__ = 'Horia Mut'
-
 import os
 import Tkinter
 import tkFileDialog
 
+from sklearn import datasets
+from sklearn.grid_search import GridSearchCV
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import SGDClassifier
 
+__author__ = 'Horia Mut'
 
 # defining options for opening a directory
 dir_opt = options = {}
@@ -17,14 +22,6 @@ def get_directory_path():
     Tkinter.Tk().withdraw()  # Close the root window
     in_path = tkFileDialog.askdirectory(**dir_opt)
     return in_path
-
-
-from sklearn import datasets
-from sklearn.grid_search import GridSearchCV
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.linear_model import SGDClassifier
 
 
 # Work parallel
