@@ -30,10 +30,9 @@ def process_folder(folder_name):
 
 def make_processed_file(filename, words_in_the_file):
     if not os.path.exists(processed_files_directory):
-        os.mkdir(processed_files_directory)
+        os.makedirs(processed_files_directory)
     processed_file = codecs.open(processed_files_directory + filename, 'w+', 'utf-8', buffering=1)
     for ustring in words_in_the_file:
-        # print ustring.encode('utf-8'),ustring
         processed_file.write(ustring)
         processed_file.write('\n')
     processed_file.close()
@@ -69,5 +68,7 @@ if __name__ == '__main__':
     folder_name_pos = "pos"
 
     assets_folder_name = folder_name_neg + "/"
+    processed_files_directory += assets_folder_name
+    print processed_files_directory
     define_part_of_speech()
     process_folder(assets_folder_name)
