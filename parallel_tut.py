@@ -1,4 +1,23 @@
-__author__ = 'horia_000'
+__author__ = 'Horia Mut'
+
+import os
+import Tkinter
+import tkFileDialog
+
+
+
+# defining options for opening a directory
+dir_opt = options = {}
+options['initialdir'] = os.getcwd()
+options['mustexist'] = True
+options['title'] = 'Twenty Newsgroups dataset folder'
+
+
+def get_directory_path():
+    Tkinter.Tk().withdraw()  # Close the root window
+    in_path = tkFileDialog.askdirectory(**dir_opt)
+    return in_path
+
 
 from sklearn import datasets
 from sklearn.grid_search import GridSearchCV
@@ -10,10 +29,9 @@ from sklearn.linear_model import SGDClassifier
 
 # Work parallel
 def do_parallel(twenty_train, text_classifier):
-
     parameters = {'vect__ngram_range': [(1, 1), (1, 2)],
-                  'tfidf__use_idf': (True,False),
-                  'clf__alpha': (1e-2,1e-3)}
+                  'tfidf__use_idf': (True, False),
+                  'clf__alpha': (1e-2, 1e-3)}
 
     grid_search_clasifier = GridSearchCV(text_classifier, parameters, n_jobs=-1)
     grid_search_clasifier = grid_search_clasifier.fit(twenty_train.data, twenty_train.target)
@@ -30,7 +48,7 @@ if __name__ == '__main__':
     categories = ['alt.atheism', 'soc.religion.christian', 'comp.graphics', 'sci.med']
 
     twenty_train = datasets.load_files(
-        "C:\\Users\\horia_000\\Documents\\Courses\\LVL3\\3258_IA_et_frameworks\\IA\\TP\\Classification\\text_analytics\\data\\twenty_newsgroups\\20news-bydate-train\\", \
+        get_directory_path() + "/20news-bydate-train", \
         description=None, categories=categories, load_content=True, shuffle=True, encoding='latin-1',
         decode_error='strict', random_state=42)
 
@@ -40,15 +58,15 @@ if __name__ == '__main__':
                                                       penalty='l2',
                                                       alpha=1e-3,
                                                       n_iter=5,
-                                                      random_state=42)),])
+                                                      random_state=42)), ])
 
     text_classifier = text_classifier.fit(twenty_train.data, twenty_train.target)
 
-    #do_parallel(twenty_train, text_classifier)
+    # do_parallel(twenty_train, text_classifier)
 
     parameters = {'vect__ngram_range': [(1, 1), (1, 2)],
-              'tfidf__use_idf': (True, False),
-              'clf__alpha': (1e-2, 1e-3),}
+                  'tfidf__use_idf': (True, False),
+                  'clf__alpha': (1e-2, 1e-3), }
 
     grid_search_clasifier = GridSearchCV(text_classifier, parameters, n_jobs=-1)
     grid_search_clasifier = grid_search_clasifier.fit(twenty_train.data[:400], twenty_train.target[:400])

@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-__author__ = 'horia_000'
+__author__ = 'Horia Mut'
 
 import os
 import codecs
@@ -8,6 +8,12 @@ from random import shuffle
 
 current_working_directory = os.getcwd() + "/Assets/"
 processed_files_directory = os.getcwd() + "/Processed/"
+part_of_speech = []
+
+
+def define_part_of_speech():
+    part_of_speech = ['NOM', 'ADV', 'VER', 'ADJ', 'PRP', 'KON', 'PRO', 'ABR']
+
 
 def process_folder(folder_name):
     '''
@@ -39,24 +45,23 @@ def process_file(filename):
     :param filename:
     :return:
     '''
-    working_file = codecs.open(current_working_directory + assets_folder_name + filename, 'r', 'utf-8',buffering=1)
+    working_file = codecs.open(current_working_directory + assets_folder_name + filename, 'r', 'utf-8', buffering=1)
     file_words = []
     for line in working_file:
         words = line.split("\t")
         word = ''
 
         try:
-            word = (words[2]).rstrip()
-            # print "unicode:",word
+            if words[1] in part_of_speech:
+                word = (words[2]).rstrip()
         except UnicodeDecodeError:
             word = words[2].rstrip()
-            #print "word:", word
         except IndexError:
-            pass #print line, filename
+            pass
         file_words.append(word)
+
     working_file.close()
     return file_words
-
 
 
 if __name__ == '__main__':
@@ -64,4 +69,5 @@ if __name__ == '__main__':
     folder_name_pos = "pos"
 
     assets_folder_name = folder_name_neg + "/"
+    define_part_of_speech()
     process_folder(assets_folder_name)

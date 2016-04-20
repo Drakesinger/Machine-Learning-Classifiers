@@ -1,12 +1,26 @@
 # -*- encoding: utf-8 -*-
-__author__ = 'horia_000'
+__author__ = 'Horia Mut'
+
+import os
+import Tkinter
+import tkFileDialog
+
+# defining options for opening a directory
+dir_opt = options = {}
+options['initialdir'] = os.getcwd()
+options['mustexist'] = True
+options['title'] = 'Twenty Newsgroups dataset folder'
+
+Tkinter.Tk().withdraw() # Close the root window
+in_path = tkFileDialog.askdirectory(**dir_opt)
+print in_path
 
 from sklearn import datasets
 
 # The categories we want.
 categories = ['alt.atheism','soc.religion.christian','comp.graphics','sci.med']
 
-twenty_train = datasets.load_files ("C:\\Users\\horia_000\\Documents\\Courses\\LVL3\\3258_IA_et_frameworks\\IA\\TP\\Classification\\text_analytics\\data\\twenty_newsgroups\\20news-bydate-train\\", \
+twenty_train = datasets.load_files (in_path + "/20news-bydate-train", \
 description=None, categories=categories, load_content=True,shuffle=True, encoding='latin-1', decode_error='strict', random_state=42)
 
 print twenty_train.target_names
@@ -61,7 +75,7 @@ text_classifier = text_classifier.fit(twenty_train.data,twenty_train.target)
 # Test and show the predicitive accuracy.
 
 import numpy as np
-twenty_test = datasets.load_files ("C:\\Users\\horia_000\\Documents\\Courses\\LVL3\\3258_IA_et_frameworks\\IA\\TP\\Classification\\text_analytics\\data\\twenty_newsgroups\\20news-bydate-test\\", \
+twenty_test = datasets.load_files (in_path+"/20news-bydate-test", \
 description=None, categories=categories, load_content=True,shuffle=True, encoding='latin-1', decode_error='strict', random_state=42)
 
 docs_test = twenty_test.data
