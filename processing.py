@@ -1,13 +1,18 @@
 # -*- encoding: utf-8 -*-
 
 import os
+import sys
+import getopt
+import argparse
 import Tkinter
 import tkFileDialog
 
 # We only have two kinds of text: positive text and negative text
 from preprocessing import categories
+from preprocessing import default_part_of_speech
 
 from preprocessing import start_preprocessing as preprocess_data
+from preprocessing import define_part_of_speech
 
 from sklearn import datasets
 from sklearn.feature_extraction.text import CountVectorizer
@@ -41,8 +46,8 @@ def get_dataset_path(type_of_data=' '):
     return dataset_path
 
 
-# Paths. Hardcoded as not important for now.
-# dataset_path = get_dataset_path()
+no_preprocess = False
+dataset_path = os.getcwd()
 dataset_path_train = os.getcwd() + "/Processed/train"  # Faster than writing it every time
 dataset_path_test = os.getcwd() + "/Processed/test"
 
@@ -73,8 +78,85 @@ def print_best_scores(grid_search, parameters):
         print("%s: %r" % (param_name, best_parameters[param_name]))
 
 
+def usage():
+    help = """ incorrect options
+    Usage: python processing.py [options]
+    """
+
+    print help
+
+
+def argument_parsing_bad():
+    argv = sys.argv
+    if len(argv) < 2:
+        usage()
+        sys.exit(0)
+    try:
+        options, arguments = getopt.getopt(sys.argv, 'hp:d:a:',
+                                           ["help", "part-of-speech=", "data-to-predict=", "assets-path="])
+        print "wtf?"
+
+        print options, arguments
+
+    except getopt.GetoptError as error:
+        print str(error)
+        usage()
+        sys.exit(0)
+    for option, argument in options:
+        if option in ("-h", "--help"):
+            usage()
+            sys.exit(0)
+        elif option in ("-p", "--part-of-speech"):
+            print option, argument
+            sys.exit(0)
+        elif option in ("-d", "--data-to-predict"):
+            print option, argument
+            sys.exit(0)
+        elif option in ("-a", "--assets-path"):
+            print option, argument
+            sys.exit(0)
+        else:
+            sys.exit(1)
+
+
 if __name__ == "__main__":
-    preprocess_data();
+    # argument_parsing_bad()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--part-of-speech', metavar='string', type=str,
+                        dest='part_of_speech',
+                        help="defines the part of speech to use. Separate with a comma ',' each word written in UPPERCASE")
+    parser.add_argument("-d", "--data-to-predict", metavar='string', type=str, default=None, dest='to_predict',
+                        help="predict the category of the string you supplied")
+    parser.add_argument("-a", "--assets-pre-path", metavar='path', type=str, dest='assets_location',
+                        help="supply the path to where the annotated data to preprocess is located")
+    parser.add_argument("-A", "--assets-post-path", metavar='path', type=str, dest='dataset_path',
+                        help="supply the path to where the annotated data to process is located")
+    parser.add_argument("-n", "--no-preprocessing", action="store_true", dest='no_preprocessing',
+                        help="tells the program to not run any pre-processing on the data")
+    args = parser.parse_args()
+
+    if args.part_of_speech:
+        list_of_types = args.part_of_speech.split(',')
+        print list_of_types
+        define_part_of_speech(list_of_types)
+
+    if args.dataset_path:
+        dataset_path = args.dataset_path
+        dataset_path_train = dataset_path + "/train"
+        dataset_path_test = dataset_path + "/test"
+        # No preprocessing since the processed data is available.
+        no_preprocess = True
+
+    if args.no_preprocessing or no_preprocess:
+        print "Skipping pre-processing step."
+    else:
+        preprocess_data()
+
+
+
+
+
 
     # Load the training dataset.
     print "Loading training dataset."
@@ -136,31 +218,43 @@ if __name__ == "__main__":
     text_classifier = text_classifier.fit(sentiment_train.data, sentiment_train.target)
 
     # Start our parallel grid search.
+
     grid_search = do_parallel(sentiment_train, text_classifier)
 
-    # Test and show the predictive accuracy.
-    print "Loading test dataset."
-    sentiment_test = datasets.load_files(dataset_path_test, \
-                                         description=None, categories=categories, load_content=True, shuffle=True,
-                                         encoding=encoding, decode_error='strict', random_state=42)
-    print "Dataset has been loaded."
-    docs_test = sentiment_test.data
-    # Start prediction.
-    print "Starting prediction analysis."
-    predicted = grid_search.predict(docs_test)
+    docs_test = None
+    if args.to_predict:
+        # User wants to predict a phrase directly. Don't load the test data.
+        print "Skip loading testing datasets."
+        docs_test = [str(args.to_predict)]
 
-    # Show the mean accuracy.
-    print "Mean accuracy: ",np.mean(predicted == sentiment_test.target)
+        predicted = text_classifier.predict(docs_test)
+        for doc, category in zip(docs_test, predicted):
+            print('%r => %s' % (doc, sentiment_train.target_names[category]))
 
-    # Print the classification report.
-    print(metrics.classification_report(sentiment_test.target, predicted,
-                                        target_names=sentiment_test.target_names))
+    else:
+        # Test and show the predictive accuracy.
+        print "Loading test dataset."
+        sentiment_test = datasets.load_files(dataset_path_test, \
+                                             description=None, categories=categories, load_content=True, shuffle=True,
+                                             encoding=encoding, decode_error='strict', random_state=42)
+        print "Dataset has been loaded."
+        docs_test = sentiment_test.data
+        # Start prediction.
+        print "Starting prediction analysis."
+        predicted = grid_search.predict(docs_test)
 
-    # Print and plot the confusion matrix.
-    cm = metrics.confusion_matrix(sentiment_test.target, predicted)
-    print cm
+        # Show the mean accuracy.
+        print "Mean accuracy: ", np.mean(predicted == sentiment_test.target)
 
-    # Plot the confusion matrix. Not worth it here.
-    # import matplotlib.pyplot as plt
-    # plt.matshow(cm)
-    # plt.show()
+        # Print the classification report.
+        print(metrics.classification_report(sentiment_test.target, predicted,
+                                            target_names=sentiment_test.target_names))
+
+        # Print and plot the confusion matrix.
+        cm = metrics.confusion_matrix(sentiment_test.target, predicted)
+        print cm
+
+        # Plot the confusion matrix. Not worth it here.
+        # import matplotlib.pyplot as plt
+        # plt.matshow(cm)
+        # plt.show()

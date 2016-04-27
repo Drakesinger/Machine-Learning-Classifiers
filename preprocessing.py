@@ -12,15 +12,17 @@ from async import print_progress
 
 __author__ = 'Horia Mut'
 
-current_working_directory = os.getcwd() + "/Assets/"
+unprocessed_assets_directory = os.getcwd() + "/Assets/"
 processed_files_directory = os.getcwd() + "/Processed/"
 
 
 # The categories available.
 categories = ['pos', 'neg']
 
+default_part_of_speech = ['NOM', 'ADV', 'VER', 'ADJ', 'PRP', 'KON', 'PRO', 'ABR']
 
-def start_preprocessing():
+
+def start_preprocessing(part_of_speech=None):
     '''
     Start the preprocessing and generate the required folders.
     :return: does not return anything.
@@ -32,10 +34,14 @@ def start_preprocessing():
         rmtree(processed_files_directory, True)
 
     print "Building pre-processed data."
+    if part_of_speech:
+        global default_part_of_speech
+        default_part_of_speech = part_of_speech
+    print "Part of Speech used:" + str(default_part_of_speech)
+
     for text_type in categories:
         assets_folder_name = text_type + "/"
-        pos = define_part_of_speech()
-        process_folder(assets_folder_name, text_type, part_of_speech=pos)
+        process_folder(assets_folder_name, text_type, part_of_speech=default_part_of_speech)
 
     global is_stop_requested
     is_stop_requested = True
@@ -43,10 +49,10 @@ def start_preprocessing():
     print "Pre-processing is done. Data is ready to work with."
 
 
-def define_part_of_speech():
+def define_part_of_speech(pos):
     # The word types we want to extract and study.
-    part_of_speech = ['NOM', 'ADV', 'VER', 'ADJ', 'PRP', 'KON', 'PRO', 'ABR']
-    return part_of_speech
+    global default_part_of_speech
+    default_part_of_speech = pos
 
 
 def process_folder(folder_name, text_type, part_of_speech=None):
@@ -60,10 +66,10 @@ def process_folder(folder_name, text_type, part_of_speech=None):
     limit = 200
 
     index = 0
-    number_of_files = len(os.listdir(current_working_directory + folder_name))
+    number_of_files = len(os.listdir(unprocessed_assets_directory + folder_name))
     print_progress(index, number_of_files, prefix='Progress:', suffix='Complete', barLength=50)
 
-    for filename in os.listdir(current_working_directory + folder_name):
+    for filename in os.listdir(unprocessed_assets_directory + folder_name):
         words_in_the_file = process_file(folder_name, filename, part_of_speech=part_of_speech)
         shuffle(words_in_the_file)
 
@@ -86,7 +92,7 @@ def process_file(assets_folder_name, filename, part_of_speech=None):
     :param filename:
     :return:
     '''
-    working_file = codecs.open(current_working_directory + assets_folder_name + filename, 'r', 'utf-8', buffering=1)
+    working_file = codecs.open(unprocessed_assets_directory + assets_folder_name + filename, 'r', 'utf-8', buffering=1)
     file_words = []
     for line in working_file:
         words = line.split("\t")
