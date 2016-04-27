@@ -2,7 +2,7 @@
 Text data machine learning with python for the IA course.
 
 ## Goal
-Use scikit learn to train a classifier in order to detect wether a text epresses positive or negative feelings.
+Use [scikit-learn](http://scikit-learn.org/stable/index.html) to train a classifier in order to detect whether a text expresses positive or negative feelings.
 
 ### Assets
 Every machine learning system requires data to work with. This data has been provided and can be found in the Assets folder.
@@ -14,7 +14,7 @@ In our case the data is made up of annotated text files containing:
 So each row within the file is of the following syntax: `[word]\t[type]\t[infinitive form]\n`
 
 ### What was done
-Steps: 
+Steps:
 
 1. **Assets processing.**
 2. Extract features from the data.
@@ -39,7 +39,3 @@ Once the classifier has been fit with the training data, we start it in parallel
 Once this is done, the testing [corpus](https://en.wikipedia.org/wiki/Text_corpus) is loaded and used with the classifier.
 Accuracy of the classifier and the confusion matrix is shown after.
 The [confusion matrix](https://en.wikipedia.org/wiki/Confusion_matrix) tells us how many of texts classified as negative are estimated to be positive and vice versa by the classifier.
-
-
-
-
