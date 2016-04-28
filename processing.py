@@ -153,11 +153,6 @@ if __name__ == "__main__":
     else:
         preprocess_data()
 
-
-
-
-
-
     # Load the training dataset.
     print "Loading training dataset."
     sentiment_train = datasets.load_files(dataset_path_train, \
